@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jiroft Network with Gallery and Timeline</title>
+<style>
+  :root {
+    --bg1:#f4efe5;
+    --bg2:#e6dcc6;
+    --paper:#fbf8f1;
+    --paper-2:#f6efdf;
+    --text:#2f271e;
+    --muted:#726658;
+    --border:#d7c8b0;
+    --border-strong:#c6af8c;
+    --gold:#9a7138;
+    --gold-2:#bb8c4f;
+    --teal:#3d6d70;
+    --teal-2:#6b9698;
+    --soft:#efe5d3;
+    --shadow:0 10px 28px rgba(58,42,19,.10);
+    --shadow-soft:0 4px 12px rgba(58,42,19,.07);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--text);font:16px/1.55 Georgia,"Times New Roman",serif}
+  body.fa{font-family:Tahoma,"Segoe UI",Arial,sans-serif}
+  .app{max-width:1380px;margin:0 auto;padding:22px 16px 36px}
+  .shell{background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,.26));border:1px solid var(--border-strong);border-radius:24px;box-shadow:var(--shadow);overflow:hidden}
+  .hero{padding:22px 22px 18px;border-bottom:1px solid var(--border);background:
+      radial-gradient(circle at top right, rgba(187,140,79,.18), transparent 28%),
+      radial-gradient(circle at bottom left, rgba(61,109,112,.12), transparent 28%),
+      linear-gradient(180deg,#fcfaf5,#f3ebdc);
+  }
+  .hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+  .title-wrap h1{margin:0;font-size:34px;line-height:1.14}
+  .subtitle{margin:8px 0 0;max-width:900px;color:var(--muted);font-size:15px;line-height:1.62}
+  .langbar{display:flex;gap:8px;flex-wrap:wrap}
+  .langbtn{border:1px solid var(--border-strong);background:var(--paper);color:var(--text);padding:8px 12px;border-radius:999px;font:600 13px/1.2 system-ui,Arial,sans-serif;cursor:pointer;box-shadow:var(--shadow-soft)}
+  .langbtn.active{background:var(--gold);border-color:var(--gold);color:#fff}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .pill{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border);background:rgba(255,255,255,.6);padding:6px 10px;border-radius:999px;color:var(--muted);font:600 12px/1.2 system-ui,Arial,sans-serif}
+  .content{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(340px,.85fr);gap:16px;padding:16px;align-items:start}
+  .panel{background:linear-gradient(180deg,var(--paper),var(--paper-2));border:1px solid var(--border);border-radius:22px;box-shadow:var(--shadow-soft)}
+  .viz{padding:14px}
+  .side{padding:18px;position:sticky;top:10px}
+  svg{display:block;width:100%;height:auto;min-height:520px}
+  .frame{fill:none;stroke:var(--border-strong);stroke-width:1.2}
+  .frame2{fill:none;stroke:rgba(154,113,56,.18);stroke-width:1}
+  .edge{fill:none;stroke:#a99d8c;stroke-width:2.6;opacity:.86;transition:stroke .2s ease, stroke-width .2s ease, opacity .2s ease}
+  .edge.indirect{stroke-dasharray:8 6}
+  .edge.active{stroke:var(--teal);stroke-width:4.5;opacity:1}
+  .flow-dot{fill:var(--teal);opacity:.9}
+  .flow-dot.alt{fill:var(--gold-2);opacity:.55}
+  .region{cursor:pointer}
+  .region circle{fill:#fffdf9;stroke:var(--border-strong);stroke-width:1.8;transition:fill .2s ease, stroke .2s ease, stroke-width .2s ease}
+  .region:hover circle{stroke:var(--gold)}
+  .region.active circle{fill:var(--soft);stroke:var(--gold);stroke-width:2.8}
+  .region text{pointer-events:none}
+  .label{font-size:15px;font-weight:700;fill:var(--text);text-anchor:middle}
+  .sub{font-size:11px;fill:var(--muted);text-anchor:middle}
+  .center circle{fill:#f8eed8;stroke:var(--gold);stroke-width:2.5}
+  .center .label{font-size:18px;font-weight:800}
+  .chip{fill:#fffdf8;stroke:var(--border);stroke-width:1}
+  .edge-label{font-size:11px;fill:var(--muted);text-anchor:middle}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin:10px 6px 4px;color:var(--muted);font:12px/1.35 system-ui,Arial,sans-serif}
+  .key{display:inline-flex;align-items:center;gap:6px}
+  .sample{width:26px;height:0;border-top:2px solid var(--muted)}
+  .sample.dashed{border-top-style:dashed}
+  .dot-sample{width:11px;height:11px;border-radius:50%;background:var(--teal);display:inline-block}
+  .viz-note{margin:12px 6px 2px;padding:10px 12px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.55);color:var(--muted);font-size:12px;line-height:1.56}
+
+  .eyebrow{font:700 11px/1.2 system-ui,Arial,sans-serif;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+  h2{margin:0;font-size:28px;line-height:1.2}
+  .status{display:inline-flex;align-items:center;gap:8px;margin-top:10px;padding:5px 11px;border-radius:999px;background:#fffdfa;border:1px solid var(--border);color:var(--muted);font:600 11px/1.2 system-ui,Arial,sans-serif}
+  .status-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);display:inline-block}
+  .section{margin-top:16px}
+  .section-title{font:700 11px/1.2 system-ui,Arial,sans-serif;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+  .section p{margin:0;font-size:14px;line-height:1.72}
+  .evidence{margin-top:8px;padding:12px 13px;background:linear-gradient(180deg,#fffdf9,#f7f0e4);border:1px solid var(--border);border-radius:15px;font-size:13px;line-height:1.72}
+
+  .gallery{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
+  .artifact-card{display:flex;align-items:flex-start;gap:10px;padding:10px 11px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.65)}
+  .artifact-icon{flex:0 0 auto;width:38px;height:38px;border-radius:12px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#fffdf9,#f2e9d9)}
+  .artifact-icon svg{width:24px;height:24px;min-height:auto;display:block}
+  .artifact-title{font-weight:700;font-size:13px;line-height:1.35}
+  .artifact-desc{font-size:12px;line-height:1.55;color:var(--muted);margin-top:2px}
+
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+  .controls button{font:600 13px/1.2 system-ui,Arial,sans-serif;border:1px solid var(--border-strong);background:var(--paper);color:var(--text);padding:9px 12px;border-radius:12px;cursor:pointer;box-shadow:var(--shadow-soft)}
+  .controls button.primary{background:var(--gold);border-color:var(--gold);color:#fff}
+  .source{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;line-height:1.65;color:var(--muted)}
+
+  .timeline-wrap{padding:0 16px 16px}
+  .timeline-panel{padding:16px 16px 18px}
+  .timeline-header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  .timeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;position:relative}
+  .timeline:before{content:"";position:absolute;left:0;right:0;top:18px;height:2px;background:linear-gradient(90deg,var(--border-strong),var(--border));z-index:0}
+  .step{position:relative;z-index:1;padding-top:0}
+  .marker{width:36px;height:36px;border-radius:50%;background:#fffdfa;border:2px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font:700 13px/1 system-ui,Arial,sans-serif;color:var(--muted);margin:0 auto 10px;transition:.2s ease}
+  .step.active .marker{background:var(--soft);border-color:var(--gold);color:var(--gold)}
+  .step-card{padding:10px 10px 12px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.6);min-height:120px}
+  .step.active .step-card{background:linear-gradient(180deg,#fffaf2,#f6ecdc);border-color:var(--border-strong)}
+  .step-title{font-weight:700;font-size:13px;line-height:1.4;margin-bottom:4px}
+  .step-desc{font-size:12px;line-height:1.55;color:var(--muted)}
+
+  .footer-text{margin-top:14px;padding:12px 14px;border-radius:16px;border:1px solid var(--border);background:rgba(255,255,255,.52);font-size:12px;color:var(--muted);line-height:1.6}
+
+  body.fa .title-wrap h1, body.fa h2, body.fa .subtitle, body.fa .section p, body.fa .evidence, body.fa .step-desc{line-height:1.9}
+  body.fa .eyebrow, body.fa .section-title{letter-spacing:0}
+  @media (max-width: 980px) {
+    .content{grid-template-columns:1fr}
+    .side{position:static}
+    .timeline{grid-template-columns:1fr}
+    .timeline:before{display:none}
+    .marker{margin-inline-start:0}
+    .step{display:grid;grid-template-columns:36px 1fr;gap:10px;align-items:start}
+    .step-card{min-height:auto}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="shell">
+    <section class="hero">
+      <div class="hero-top">
+        <div class="title-wrap">
+          <h1 id="mainTitle"></h1>
+          <p class="subtitle" id="mainSubtitle"></p>
+        </div>
+        <div class="langbar" aria-label="Language selector">
+          <button class="langbtn active" data-lang="en">English</button>
+          <button class="langbtn" data-lang="ru">Русский</button>
+          <button class="langbtn" data-lang="fa">فارسی</button>
+          <button class="langbtn" data-lang="de">Deutsch</button>
+        </div>
+      </div>
+      <div class="meta">
+        <span class="pill" id="pill1"></span>
+        <span class="pill" id="pill2"></span>
+        <span class="pill" id="pill3"></span>
+      </div>
+    </section>
+
+    <div class="content">
+      <section class="panel viz">
+        <svg id="network" viewBox="0 0 780 540" role="img" aria-labelledby="svgTitle svgDesc">
+          <title id="svgTitle"></title>
+          <desc id="svgDesc"></desc>
+
+          <rect class="frame" x="8" y="8" width="764" height="524" rx="18" ry="18"></rect>
+          <rect class="frame2" x="18" y="18" width="744" height="504" rx="12" ry="12"></rect>
+
+          <path id="edge-shahdad" class="edge" d="M392 270 C332 238 255 163 176 108"></path>
+          <path id="edge-susa" class="edge indirect" d="M392 270 C267 295 172 317 82 346"></path>
+          <path id="edge-shahr" class="edge" d="M392 270 C479 206 561 133 640 90"></path>
+          <path id="edge-indus" class="edge indirect" d="M392 270 C503 252 596 254 698 270"></path>
+          <path id="edge-gulf" class="edge indirect" d="M392 270 C432 368 497 433 570 473"></path>
+
+          <g id="dots"></g>
+
+          <g>
+            <rect class="chip" x="220" y="143" width="144" height="28" rx="12" ry="12"></rect>
+            <text id="edge-text-shahdad" class="edge-label" x="292" y="161"></text>
+            <rect class="chip" x="137" y="297" width="150" height="28" rx="12" ry="12"></rect>
+            <text id="edge-text-susa" class="edge-label" x="212" y="315"></text>
+            <rect class="chip" x="482" y="141" width="156" height="28" rx="12" ry="12"></rect>
+            <text id="edge-text-shahr" class="edge-label" x="560" y="159"></text>
+            <rect class="chip" x="537" y="231" width="166" height="28" rx="12" ry="12"></rect>
+            <text id="edge-text-indus" class="edge-label" x="620" y="249"></text>
+            <rect class="chip" x="456" y="404" width="194" height="28" rx="12" ry="12"></rect>
+            <text id="edge-text-gulf" class="edge-label" x="553" y="422"></text>
+          </g>
+
+          <g class="region" data-id="shahdad" tabindex="0" role="button">
+            <circle cx="168" cy="102" r="58"></circle>
+            <text id="node-shahdad" class="label" x="168" y="99"></text>
+            <text id="node-shahdad-sub" class="sub" x="168" y="119"></text>
+          </g>
+
+          <g class="region" data-id="susa" tabindex="0" role="button">
+            <circle cx="82" cy="350" r="54"></circle>
+            <text id="node-susa" class="label" x="82" y="347"></text>
+            <text id="node-susa-sub" class="sub" x="82" y="367"></text>
+          </g>
+
+          <g class="region" data-id="shahr" tabindex="0" role="button">
+            <circle cx="648" cy="86" r="64"></circle>
+            <text id="node-shahr" class="label" x="648" y="83"></text>
+            <text id="node-shahr-sub" class="sub" x="648" y="103"></text>
+          </g>
+
+          <g class="region" data-id="indus" tabindex="0" role="button">
+            <circle cx="706" cy="272" r="58"></circle>
+            <text id="node-indus" class="label" x="706" y="269"></text>
+            <text id="node-indus-sub" class="sub" x="706" y="289"></text>
+          </g>
+
+          <g class="region" data-id="gulf" tabindex="0" role="button">
+            <circle cx="578" cy="480" r="62"></circle>
+            <text id="node-gulf" class="label" x="578" y="477"></text>
+            <text id="node-gulf-sub" class="sub" x="578" y="497"></text>
+          </g>
+
+          <g class="center">
+            <circle cx="392" cy="270" r="80"></circle>
+            <text id="node-center" class="label" x="392" y="262"></text>
+            <text id="node-center-sub1" class="sub" x="392" y="282"></text>
+            <text id="node-center-sub2" class="sub" x="392" y="299"></text>
+          </g>
+        </svg>
+
+        <div class="legend">
+          <span class="key"><span class="sample"></span><span id="legend1"></span></span>
+          <span class="key"><span class="sample dashed"></span><span id="legend2"></span></span>
+          <span class="key"><span class="dot-sample"></span><span id="legend3"></span></span>
+        </div>
+        <div class="viz-note" id="vizNote"></div>
+      </section>
+
+      <aside class="panel side">
+        <div class="eyebrow" id="eyebrow"></div>
+        <h2 id="name"></h2>
+        <div class="status"><span class="status-dot"></span><span id="statusText"></span></div>
+
+        <div class="section">
+          <div class="section-title" id="whatTitle"></div>
+          <p id="summary"></p>
+        </div>
+
+        <div class="section">
+          <div class="section-title" id="evidenceTitle"></div>
+          <div class="evidence" id="evidence"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-title" id="galleryTitle"></div>
+          <div class="gallery" id="gallery"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-title" id="cautionTitle"></div>
+          <p id="caution"></p>
+        </div>
+
+        <div class="controls">
+          <button class="primary" id="toggleAuto"></button>
+          <button id="resetBtn"></button>
+        </div>
+
+        <div class="source" id="source"></div>
+      </aside>
+    </div>
+
+    <div class="timeline-wrap">
+      <section class="panel timeline-panel">
+        <div class="timeline-header">
+          <div class="section-title" id="timelineTitle"></div>
+        </div>
+        <div class="timeline" id="timeline"></div>
+        <div class="footer-text" id="footerText"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = {"en": {"dir": "ltr", "bodyClass": "", "ui": {"mainTitle": "Jiroft in a Bronze Age Network", "mainSubtitle": "An interactive diagram showing Jiroft / the Halil Rud basin and its archaeological connections with Shahdad, Susa, Shahr-i Sokhta, the Indus world, and the Persian Gulf.", "pill1": "3rd millennium BCE", "pill2": "interactive educational diagram", "pill3": "click a region to keep it selected", "titleSVG": "Jiroft and its contact network", "descSVG": "Animated schematic of Jiroft and its Bronze Age contacts.", "legend1": "closer archaeological parallels", "legend2": "broader / indirect network", "legend3": "schematic circulation", "vizNote": "Animated dots are illustrative only: they do not represent proven direct caravan routes or the exact quantity of exchanged goods.", "eyebrow": "Selected connection", "whatTitle": "What connects them?", "evidenceTitle": "Goods / evidence", "galleryTitle": "Artifact gallery", "cautionTitle": "Caution", "timelineTitle": "Mini-timeline", "toggleOn": "Pause autoplay", "toggleOff": "Resume autoplay", "resetBtn": "Reset to Shahdad", "footerText": "Use this diagram as a guide to interaction spheres and archaeological parallels, not as a literal map of fixed trade routes."}, "edgeLabels": {"shahdad": "chlorite · ceramics", "susa": "chlorite distribution", "shahr": "ceramics · exchange", "indus": "prestige goods · chlorite", "gulf": "maritime corridor · chlorite"}, "nodes": {"shahdad": ["Shahdad", "Kerman"], "susa": ["Susa", "Susiana"], "shahr": ["Shahr-i Sokhta", "Sistan"], "indus": ["Indus Valley", "Mohenjo-daro etc."], "gulf": ["Persian Gulf", "Tarut · Failaka"], "center": ["JIROFT", "Halil Rud", "Konar Sandal"]}, "goodsTitleMap": {"chlorite": "Chlorite vessels", "ceramics": "Ceramic parallels", "prestige": "Prestige goods", "maritime": "Maritime connectivity", "glyptic": "Glyptic / artistic parallels", "shell": "Shell and marine resources"}, "timeline": [{"label": "Early 3rd millennium BCE", "desc": "Emerging regional centers in southeastern Iran."}, {"label": "Middle 3rd millennium BCE", "desc": "Interaction between Jiroft, Shahdad and neighboring zones intensifies."}, {"label": "Later 3rd millennium BCE", "desc": "Material parallels link the Halil Rud basin with Shahr-i Sokhta and wider eastern Iran."}, {"label": "Long-distance circulation", "desc": "Chlorite vessels and prestige goods appear in the Indus world."}, {"label": "Maritime corridor", "desc": "The Persian Gulf helps redistribute objects toward Arabia and Mesopotamia."}], "regions": {"shahdad": {"name": "Shahdad", "status": "Regional archaeological parallel", "summary": "Shahdad and the Halil Rud basin belonged to the wider Bronze Age interaction sphere of southeastern Iran. Comparable chlorite vessels and other material traditions occur at both sites.", "evidence": "Chlorite vessels occur in the rich cemeteries of Shahdad, while recent research also notes ceramic parallels between material from the Halil Rud area and later 3rd-millennium contexts at Shahdad.", "caution": "Similarity does not prove a direct caravan route between the two centers. The evidence is strongest for participation in a broader regional network.", "source": "Key references: Hakemi; Perrot; Eskandari et al.; Encyclopaedia Iranica. This network is schematic: line position, animation, and thickness do not encode distance, trade volume, or political control.", "goods": [["chlorite", "Comparable carved stone vessels occur at both sites."], ["ceramics", "Regional ceramic assemblages show meaningful parallels."]], "timelineIndex": 1}, "susa": {"name": "Susa", "status": "Western distribution and artistic parallels", "summary": "Objects of the wider carved-chlorite tradition reached Susa, and scholars also compare glyptic and artistic material from southeastern Iran with material from Elam and Susiana.", "evidence": "Carved chlorite vessels of the wider 'Intercultural Style' are documented at Susa, while comparative studies note iconographic and glyptic correspondences between southeastern Iran and southwestern Iran.", "caution": "This does not demonstrate a direct Jiroft–Susa trade route. Many famous 'Jiroft' objects came from looted contexts, and the mechanisms by which such objects moved westward remain uncertain.", "source": "Key references: Encyclopaedia Iranica ('Chlorite'); Pittman; studies comparing Konar Sandal and Susa.", "goods": [["chlorite", "Chlorite vessels belong to a wider distribution sphere reaching Susiana."], ["glyptic", "Iconographic and glyptic parallels are often discussed."]], "timelineIndex": 2}, "shahr": {"name": "Shahr-i Sokhta", "status": "Eastern Iranian interaction sphere", "summary": "Jiroft and Shahr-i Sokhta were major centers within the complex exchange systems of eastern and southeastern Iran during the 3rd millennium BCE.", "evidence": "Ceramic forms from graves in the Halil Rud area have close chronological and typological parallels at Shahr-i Sokhta. Both centers also participated in long-distance networks involving stone, shell, and other prestige materials.", "caution": "The relationship changed through time. 'Connection' here means archaeological and exchange-network links, not political unity.", "source": "Key references: Pittman; Eskandari et al.; Shahr-i Sokhta studies.", "goods": [["ceramics", "Strong ceramic and chronological parallels."], ["shell", "Networks involving shell and other valued materials mattered here."]], "timelineIndex": 2}, "indus": {"name": "Indus Valley", "status": "Long-distance distribution", "summary": "The distribution of carved chlorite vessels and related prestige goods reaches eastward into the Indus world, including finds at Mohenjo-daro.", "evidence": "Vessels belonging to the wider carved-chlorite tradition are known from the Indus Valley. Jiroft is therefore often discussed as part of the exchange world between the Iranian plateau and the Indus civilization.", "caution": "A vessel found in the Indus Valley is not automatic proof of direct commerce with Konar Sandal. Goods may have passed through several intermediaries, and provenance varies between objects.", "source": "Key references: Encyclopaedia Iranica ('Chlorite', 'Jiroft'); Pittman; Perrot.", "goods": [["prestige", "Prestige goods circulated over long distances."], ["chlorite", "Carved chlorite vessels are central to this discussion."]], "timelineIndex": 3}, "gulf": {"name": "Persian Gulf", "status": "Maritime redistribution network", "summary": "The Persian Gulf formed a major southern corridor through which southeastern Iranian prestige goods could circulate toward Arabia and Mesopotamia.", "evidence": "Carved chlorite vessels are especially well represented on Tarut and are also known from Failaka. Shell-working evidence in southeastern Iran likewise points toward access to Gulf or Arabian Sea resources.", "caution": "The Gulf evidence supports maritime connectivity, but it does not mean that every chlorite vessel there was produced at Jiroft or shipped directly from the Halil Rud.", "source": "Key references: Encyclopaedia Iranica ('Maritime Trade', 'Chlorite'); Perrot.", "goods": [["maritime", "Sea-borne redistribution and coastal corridors matter here."], ["chlorite", "Chlorite vessels are a key class of Gulf finds."], ["shell", "Shell resources and shell-working form part of the wider picture."]], "timelineIndex": 4}}}, "ru": {"dir": "ltr", "bodyClass": "", "ui": {"mainTitle": "Джирофт в сети контактов бронзового века", "mainSubtitle": "Интерактивная схема, показывающая Джирофт / долину Халильруда и его археологические связи с Шахдадом, Сузами, Шахр-и Сохте, миром Инда и Персидским заливом.", "pill1": "III тыс. до н. э.", "pill2": "интерактивная образовательная схема", "pill3": "нажмите на регион, чтобы закрепить его", "titleSVG": "Джирофт и его сеть контактов", "descSVG": "Анимированная схема контактов Джирофта в бронзовом веке.", "legend1": "более близкие археологические параллели", "legend2": "более широкая / косвенная сеть", "legend3": "схематическая циркуляция", "vizNote": "Движущиеся точки носят иллюстративный характер: они не обозначают доказанные прямые караванные маршруты и не показывают точный объём обмена.", "eyebrow": "Выбранная связь", "whatTitle": "Что их связывает?", "evidenceTitle": "Товары / свидетельства", "galleryTitle": "Галерея артефактов", "cautionTitle": "Осторожность", "timelineTitle": "Мини-хронология", "toggleOn": "Пауза автопереключения", "toggleOff": "Возобновить автопереключение", "resetBtn": "Вернуться к Шахдаду", "footerText": "Используйте эту схему как ориентир по сферам взаимодействия и археологическим параллелям, а не как буквальную карту фиксированных торговых путей."}, "edgeLabels": {"shahdad": "хлорит · керамика", "susa": "распространение хлорита", "shahr": "керамика · обмен", "indus": "престижные вещи · хлорит", "gulf": "морской коридор · хлорит"}, "nodes": {"shahdad": ["Шахдад", "Керман"], "susa": ["Сузы", "Сузиана"], "shahr": ["Шахр-и Сохте", "Систан"], "indus": ["Долина Инда", "Мохенджо-Даро и др."], "gulf": ["Персидский залив", "Тарут · Файлака"], "center": ["ДЖИРОФТ", "Халильруд", "Конар-Сандал"]}, "goodsTitleMap": {"chlorite": "Хлоритовые сосуды", "ceramics": "Керамические параллели", "prestige": "Престижные предметы", "maritime": "Морская связность", "glyptic": "Глиптика / художественные параллели", "shell": "Раковины и морские ресурсы"}, "timeline": [{"label": "Начало III тыс. до н. э.", "desc": "В юго-восточном Иране формируются ранние региональные центры."}, {"label": "Середина III тыс. до н. э.", "desc": "Усиливается взаимодействие между Джирофтом, Шахдадом и соседними зонами."}, {"label": "Позднее III тыс. до н. э.", "desc": "Материальные параллели связывают Халильруд с Шахр-и Сохте и более широким восточноиранским миром."}, {"label": "Дальняя циркуляция", "desc": "Хлоритовые сосуды и престижные вещи появляются в мире Инда."}, {"label": "Морской коридор", "desc": "Персидский залив участвует в перераспределении вещей в сторону Аравии и Месопотамии."}], "regions": {"shahdad": {"name": "Шахдад", "status": "Региональная археологическая параллель", "summary": "Шахдад и долина Халильруда входили в более широкую сферу взаимодействия юго-восточного Ирана эпохи бронзы. На обоих памятниках встречаются сопоставимые хлоритовые сосуды и другие сходные черты материальной культуры.", "evidence": "Хлоритовые сосуды известны по богатым некрополям Шахдада; кроме того, новейшие исследования отмечают и керамические параллели между материалом Халильруда и более поздними контекстами III тыс. до н. э. в Шахдаде.", "caution": "Сходство не доказывает существование прямого караванного маршрута между этими двумя центрами. Наиболее надёжный вывод — участие обоих в более широкой региональной сети.", "source": "Ключевая литература: Hakemi; Perrot; Eskandari et al.; Encyclopaedia Iranica. Схема условна: положение линий, анимация и толщина не отражают расстояние, объём торговли или политический контроль.", "goods": [["chlorite", "Сопоставимые резные каменные сосуды встречаются на обоих памятниках."], ["ceramics", "Региональные керамические комплексы демонстрируют ряд параллелей."]], "timelineIndex": 1}, "susa": {"name": "Сузы", "status": "Западное распространение и художественные параллели", "summary": "Предметы более широкой традиции резного хлорита достигали Суз, а исследователи также сопоставляют глиптику и художественный материал юго-восточного Ирана с Эламом и Сузианой.", "evidence": "Резные хлоритовые сосуды так называемого «межкультурного стиля» засвидетельствованы в Сузах; сравнительные исследования отмечают и иконографические, и глиптические параллели между юго-восточным и юго-западным Ираном.", "caution": "Это само по себе не доказывает прямой торговый путь Джирофт—Сузы. Многие знаменитые «джирофтские» вещи происходят из разграбленных контекстов, а механизмы их продвижения на запад остаются неясными.", "source": "Ключевая литература: Encyclopaedia Iranica («Chlorite»); Pittman; исследования, сопоставляющие Конар-Сандал и Сузы.", "goods": [["chlorite", "Хлоритовые сосуды входят в более широкую сферу распространения, достигающую Сузианы."], ["glyptic", "Часто обсуждаются иконографические и глиптические параллели."]], "timelineIndex": 2}, "shahr": {"name": "Шахр-и Сохте", "status": "Восточноиранская сфера взаимодействия", "summary": "Джирофт и Шахр-и Сохте были важными центрами в сложных системах обмена восточного и юго-восточного Ирана III тыс. до н. э.", "evidence": "Некоторые формы керамики из погребений и памятников Халильруда имеют близкие хронологические и типологические параллели в Шахр-и Сохте. Оба центра также участвовали в дальних сетях обмена, связанных с камнем, раковинами и другими престижными материалами.", "caution": "Характер этих отношений менялся со временем. «Связь» здесь означает археологические и обменные контакты, а не политическое единство.", "source": "Ключевая литература: Pittman; Eskandari et al.; исследования по Шахр-и Сохте.", "goods": [["ceramics", "Сильные керамические и хронологические параллели."], ["shell", "Здесь важны сети, связанные с раковинами и другими ценными материалами."]], "timelineIndex": 2}, "indus": {"name": "Долина Инда", "status": "Дальнее распространение", "summary": "Распространение резных хлоритовых сосудов и связанных с ними престижных предметов простирается на восток, в мир Инда, включая находки из Мохенджо-Даро.", "evidence": "Сосуды, относящиеся к более широкой традиции резного хлорита, известны в долине Инда. Поэтому Джирофт часто рассматривается как часть обменного мира между Иранским плато и цивилизацией Инда.", "caution": "Находка сосуда в долине Инда ещё не означает автоматически прямую торговлю с Конар-Сандалом. Предметы могли переходить через нескольких посредников, и их происхождение различно.", "source": "Ключевая литература: Encyclopaedia Iranica («Chlorite», «Jiroft»); Pittman; Perrot.", "goods": [["prestige", "Престижные предметы циркулировали на больших расстояниях."], ["chlorite", "Резные хлоритовые сосуды — один из главных элементов дискуссии."]], "timelineIndex": 3}, "gulf": {"name": "Персидский залив", "status": "Морская сеть перераспределения", "summary": "Персидский залив был важным южным коридором, через который престижные предметы юго-восточного Ирана могли распространяться в Аравию и Месопотамию.", "evidence": "Резные хлоритовые сосуды особенно хорошо представлены на Таруте и также известны на Файлаке. Данные о работе с раковинами в юго-восточном Иране тоже указывают на доступ к ресурсам залива или Аравийского моря.", "caution": "Материал из Персидского залива поддерживает идею морской связности, но это не значит, что каждый найденный там хлоритовый сосуд был изготовлен в Джирофте или напрямую доставлен из Халильруда.", "source": "Ключевая литература: Encyclopaedia Iranica («Maritime Trade», «Chlorite»); Perrot.", "goods": [["maritime", "Здесь особенно важны морская транспортировка и прибрежные коридоры."], ["chlorite", "Хлоритовые сосуды — ключевая категория находок в зоне залива."], ["shell", "Раковины и морские ресурсы — часть более широкой картины."]], "timelineIndex": 4}}}, "fa": {"dir": "rtl", "bodyClass": "fa", "ui": {"mainTitle": "جیرفت در شبکه ارتباطات عصر مفرغ", "mainSubtitle": "نموداری تعاملی که جیرفت / حوزه هلیل‌رود و پیوندهای باستان‌شناختی آن را با شهداد، شوش، شهر سوخته، جهان سند و خلیج فارس نشان می‌دهد.", "pill1": "هزاره سوم پیش از میلاد", "pill2": "نمودار آموزشی تعاملی", "pill3": "برای تثبیت، روی هر منطقه کلیک کنید", "titleSVG": "جیرفت و شبکه ارتباطات آن", "descSVG": "نموداری متحرک از ارتباطات جیرفت در عصر مفرغ.", "legend1": "همانندی‌های نزدیک‌ترِ باستان‌شناختی", "legend2": "شبکه گسترده‌تر / غیرمستقیم", "legend3": "گردشِ طرح‌وار", "vizNote": "نقاط متحرک فقط جنبه نمایشی دارند: آن‌ها نه مسیرهای قطعی کاروانی را نشان می‌دهند و نه مقدار دقیق مبادلات را.", "eyebrow": "پیوند انتخاب‌شده", "whatTitle": "چه چیزی آن‌ها را به هم پیوند می‌دهد؟", "evidenceTitle": "کالاها / شواهد", "galleryTitle": "گالری اشیا", "cautionTitle": "احتیاط در تفسیر", "timelineTitle": "خط زمان کوتاه", "toggleOn": "توقف پخش خودکار", "toggleOff": "ادامه پخش خودکار", "resetBtn": "بازگشت به شهداد", "footerText": "از این نمودار به‌عنوان راهنمایی برای سپهرهای تعاملی و همانندی‌های باستان‌شناختی استفاده کنید، نه به‌عنوان نقشه‌ای لفظ‌به‌لفظ از مسیرهای ثابت بازرگانی."}, "edgeLabels": {"shahdad": "کلریت · سفال", "susa": "گسترش کلریت", "shahr": "سفال · مبادله", "indus": "کالاهای ارزشمند · کلریت", "gulf": "دالان دریایی · کلریت"}, "nodes": {"shahdad": ["شهداد", "کرمان"], "susa": ["شوش", "شوشان"], "shahr": ["شهر سوخته", "سیستان"], "indus": ["دره سند", "موهنجو‌دارو و جز آن"], "gulf": ["خلیج فارس", "تاروت · فیلکه"], "center": ["جیرفت", "هلیل‌رود", "کنارصندل"]}, "goodsTitleMap": {"chlorite": "ظرف‌های کلریتی", "ceramics": "همانندی‌های سفالی", "prestige": "اشیای ارزشمند", "maritime": "پیوندهای دریایی", "glyptic": "مهرشناسی / همانندی‌های هنری", "shell": "صدف و منابع دریایی"}, "timeline": [{"label": "آغاز هزاره سوم پ.م.", "desc": "مراکز منطقه‌ای اولیه در جنوب‌شرق ایران شکل می‌گیرند."}, {"label": "میانه هزاره سوم پ.م.", "desc": "تعامل میان جیرفت، شهداد و نواحی همجوار شدت می‌گیرد."}, {"label": "اواخر هزاره سوم پ.م.", "desc": "همسانی‌های مادی، هلیل‌رود را به شهر سوخته و جهان گسترده‌تر شرق ایران پیوند می‌دهد."}, {"label": "گردش دوربرد", "desc": "ظرف‌های کلریتی و اشیای ارزشمند در جهان سند دیده می‌شوند."}, {"label": "دالان دریایی", "desc": "خلیج فارس در بازتوزیع اشیا به سوی عربستان و میان‌رودان نقش دارد."}], "regions": {"shahdad": {"name": "شهداد", "status": "همسانی‌های باستان‌شناختی در مقیاس منطقه‌ای", "summary": "شهداد و حوزه هلیل‌رود هر دو بخشی از سپهر تعاملی گسترده‌ترِ عصر مفرغ در جنوب‌شرق ایران بودند. ظرف‌های کلریتی مشابه و دیگر سنت‌های مادی در هر دو محوطه دیده می‌شود.", "evidence": "ظرف‌های کلریتی در گورستان‌های غنی شهداد به‌دست آمده‌اند و پژوهش‌های جدید همچنین به همانندی‌های سفالی میان موادِ هلیل‌رود و زمینه‌های متأخر هزاره سوم در شهداد اشاره می‌کنند.", "caution": "شباهت لزوماً به معنای وجود یک مسیر مستقیم کاروانی میان این دو مرکز نیست. قوی‌ترین نتیجه آن است که هر دو در شبکه‌ای گسترده‌تر در سطح منطقه مشارکت داشتند.", "source": "مراجع کلیدی: Hakemi؛ Perrot؛ Eskandari et al.؛ دانشنامه ایرانیکا. این شبکه طرح‌وار است: جای‌گیری خطوط، حرکت آن‌ها و ضخامت‌شان نه فاصله جغرافیایی را نشان می‌دهد، نه حجم مبادله و نه کنترل سیاسی را.", "goods": [["chlorite", "ظرف‌های سنگیِ کنده‌کاری‌شده در هر دو محوطه قابل مقایسه‌اند."], ["ceramics", "مجموعه‌های سفالی منطقه‌ای چندین همسانی مهم نشان می‌دهند."]], "timelineIndex": 1}, "susa": {"name": "شوش", "status": "گسترش به سوی غرب و همانندی‌های هنری", "summary": "اشیای وابسته به سنت گسترده‌ترِ کلریتِ کنده‌کاری‌شده به شوش نیز راه یافته‌اند و پژوهشگران همچنین مواد گلیپتیک و هنری جنوب‌شرق ایران را با شوشان و ایلام مقایسه می‌کنند.", "evidence": "ظرف‌های کلریتیِ موسوم به سبک بین‌فرهنگی در شوش شناخته شده‌اند و مطالعات تطبیقی به همانندی‌های شمایل‌نگارانه و مهرشناختی میان جنوب‌شرق ایران و جنوب‌غرب ایران اشاره دارند.", "caution": "این امر به خودی خود وجود یک مسیر مستقیم تجارت میان جیرفت و شوش را ثابت نمی‌کند. بسیاری از اشیای مشهورِ «جیرفت» از زمینه‌های غارت‌شده به‌دست آمده‌اند و سازوکار انتقال آن‌ها به غرب هنوز کاملاً روشن نیست.", "source": "مراجع کلیدی: دانشنامه ایرانیکا («Chlorite»)؛ Pittman؛ پژوهش‌های تطبیقی میان کنارصندل و شوش.", "goods": [["chlorite", "ظرف‌های کلریتی بخشی از حوزه گسترده‌تری از پراکندگی‌اند که تا شوشان می‌رسد."], ["glyptic", "همانندی‌های شمایل‌نگارانه و مهرشناختی بارها مورد بحث قرار گرفته‌اند."]], "timelineIndex": 2}, "shahr": {"name": "شهر سوخته", "status": "سپهر تعاملی ایران شرقی", "summary": "جیرفت و شهر سوخته هر دو از مراکز مهم در نظام‌های پیچیده مبادله در شرق و جنوب‌شرق ایران در هزاره سوم پیش از میلاد بودند.", "evidence": "برخی فرم‌های سفالی در گورها و محوطه‌های حوزه هلیل‌رود از نظر زمانی و گونه‌شناختی با مواد شهر سوخته شباهت نزدیک دارند. هر دو مرکز همچنین در شبکه‌های دوربرد شامل سنگ، صدف و دیگر مواد ارزشمند نقش داشتند.", "caution": "ماهیت این رابطه در طول زمان تغییر می‌کرد. «ارتباط» در اینجا به معنای پیوندهای باستان‌شناختی و شبکه‌های مبادله است، نه لزوماً وحدت سیاسی.", "source": "مراجع کلیدی: Pittman؛ Eskandari et al.؛ پژوهش‌های شهر سوخته.", "goods": [["ceramics", "همانندی‌های قویِ سفالی و گاه‌نگاری."], ["shell", "شبکه‌هایی مرتبط با صدف و دیگر مواد ارزشمند در اینجا اهمیت دارند."]], "timelineIndex": 2}, "indus": {"name": "دره سند", "status": "گسترش دوربرد", "summary": "پراکندگی ظرف‌های کلریتی کنده‌کاری‌شده و دیگر اشیای ارزشمند تا جهانِ سند امتداد می‌یابد، از جمله یافته‌هایی در موهنجو‌دارو.", "evidence": "ظرف‌هایی از سنت گسترده‌ترِ کلریتِ کنده‌کاری‌شده در دره سند شناخته شده‌اند. از این رو جیرفت اغلب به‌عنوان بخشی از جهانِ مبادله میان فلات ایران و تمدن سند بررسی می‌شود.", "caution": "وجود یک ظرف در دره سند به خودی خود ثابت نمی‌کند که آن شیء مستقیماً از کنارصندل آمده است. اشیا ممکن است از طریق چند واسطه منتقل شده باشند و منشأ آن‌ها یکسان نیست.", "source": "مراجع کلیدی: دانشنامه ایرانیکا («Chlorite» و «Jiroft»)؛ Pittman؛ Perrot.", "goods": [["prestige", "اشیای ارزشمند در فواصل بسیار طولانی جابه‌جا می‌شدند."], ["chlorite", "ظرف‌های کلریتیِ کنده‌کاری‌شده یکی از عناصر اصلی این بحث‌اند."]], "timelineIndex": 3}, "gulf": {"name": "خلیج فارس", "status": "شبکه بازتوزیع دریایی", "summary": "خلیج فارس دالان مهم جنوبی‌ای بود که از طریق آن اشیای ارزشمندِ جنوب‌شرق ایران می‌توانستند به سوی عربستان و میان‌رودان گردش پیدا کنند.", "evidence": "ظرف‌های کلریتی به‌ویژه در تاروت به‌خوبی شناخته شده‌اند و از فیلکه نیز گزارش شده‌اند. شواهد کار با صدف در جنوب‌شرق ایران نیز به دسترسی به منابع خلیج فارس یا دریای عمان / عرب اشاره می‌کند.", "caution": "شواهد خلیج فارس از پیوندهای دریایی حمایت می‌کند، اما به این معنا نیست که هر ظرف کلریتیِ یافت‌شده در آنجا الزاماً در جیرفت ساخته شده یا مستقیماً از هلیل‌رود حمل شده باشد.", "source": "مراجع کلیدی: دانشنامه ایرانیکا («Maritime Trade» و «Chlorite»)؛ Perrot.", "goods": [["maritime", "در اینجا جابه‌جایی دریایی و کریدورهای ساحلی نقش ویژه دارند."], ["chlorite", "ظرف‌های کلریتی از مهم‌ترین دسته‌های یافته‌ها در حوزه خلیج‌اند."], ["shell", "صدف و منابع دریایی بخشی از تصویر گسترده‌تر هستند."]], "timelineIndex": 4}}}, "de": {"dir": "ltr", "bodyClass": "", "ui": {"mainTitle": "Jiroft in einem Netzwerk der Bronzezeit", "mainSubtitle": "Ein interaktives Diagramm, das Jiroft / das Halil-Rud-Becken und seine archäologischen Verbindungen mit Shahdad, Susa, Schahr-i Sochta, der Induswelt und dem Persischen Golf zeigt.", "pill1": "3. Jahrtausend v. Chr.", "pill2": "interaktives didaktisches Diagramm", "pill3": "Region anklicken, um sie festzuhalten", "titleSVG": "Jiroft und sein Kontaktnetz", "descSVG": "Animiertes Schema der Kontakte Jirofts in der Bronzezeit.", "legend1": "engere archäologische Parallelen", "legend2": "breiteres / indirektes Netzwerk", "legend3": "schematische Zirkulation", "vizNote": "Die bewegten Punkte dienen nur der Veranschaulichung: Sie zeigen weder nachgewiesene direkte Karawanenrouten noch die genaue Menge ausgetauschter Güter an.", "eyebrow": "Ausgewählte Verbindung", "whatTitle": "Was verbindet sie?", "evidenceTitle": "Güter / Belege", "galleryTitle": "Objektgalerie", "cautionTitle": "Vorsicht", "timelineTitle": "Mini-Zeitleiste", "toggleOn": "Autowiedergabe pausieren", "toggleOff": "Autowiedergabe fortsetzen", "resetBtn": "Zu Shahdad zurückkehren", "footerText": "Nutzen Sie dieses Diagramm als Orientierung zu Interaktionssphären und archäologischen Parallelen, nicht als wörtliche Karte fester Handelsrouten."}, "edgeLabels": {"shahdad": "Chlorit · Keramik", "susa": "Verbreitung von Chlorit", "shahr": "Keramik · Austausch", "indus": "Prestigegüter · Chlorit", "gulf": "maritimer Korridor · Chlorit"}, "nodes": {"shahdad": ["Shahdad", "Kerman"], "susa": ["Susa", "Susiana"], "shahr": ["Schahr-i Sochta", "Sistan"], "indus": ["Industal", "Mohenjo-daro usw."], "gulf": ["Persischer Golf", "Tarut · Failaka"], "center": ["JIROFT", "Halil Rud", "Konar Sandal"]}, "goodsTitleMap": {"chlorite": "Chloritgefäße", "ceramics": "Keramische Parallelen", "prestige": "Prestigegüter", "maritime": "Maritime Konnektivität", "glyptic": "Glyptik / künstlerische Parallelen", "shell": "Muscheln und Meeresressourcen"}, "timeline": [{"label": "Frühes 3. Jahrtausend v. Chr.", "desc": "Frühe regionale Zentren entstehen im Südostiran."}, {"label": "Mittleres 3. Jahrtausend v. Chr.", "desc": "Die Interaktion zwischen Jiroft, Shahdad und benachbarten Zonen nimmt zu."}, {"label": "Späteres 3. Jahrtausend v. Chr.", "desc": "Materielle Parallelen verbinden das Halil-Rud-Becken mit Schahr-i Sochta und dem weiteren Ostraum Irans."}, {"label": "Fernzirkulation", "desc": "Chloritgefäße und Prestigegüter erscheinen in der Induswelt."}, {"label": "Maritimer Korridor", "desc": "Der Persische Golf trägt zur Umverteilung von Objekten nach Arabien und Mesopotamien bei."}], "regions": {"shahdad": {"name": "Shahdad", "status": "Regionale archäologische Parallele", "summary": "Shahdad und das Halil-Rud-Becken gehörten zur weiteren Interaktionssphäre des bronzezeitlichen Südostiran. Vergleichbare Chloritgefäße und andere Züge der materiellen Kultur treten an beiden Orten auf.", "evidence": "Chloritgefäße sind aus den reichen Nekropolen von Shahdad bekannt; neuere Forschungen verweisen außerdem auf keramische Parallelen zwischen dem Material aus dem Halil-Rud-Gebiet und späteren Kontexten des 3. Jahrtausends in Shahdad.", "caution": "Ähnlichkeit beweist keine direkte Karawanenroute zwischen beiden Zentren. Am sichersten ist die Feststellung, dass beide an einem größeren regionalen Netzwerk beteiligt waren.", "source": "Wichtige Literatur: Hakemi; Perrot; Eskandari et al.; Encyclopaedia Iranica. Das Diagramm ist schematisch: Position, Animation und Linienstärke kodieren weder Distanz noch Handelsvolumen oder politische Kontrolle.", "goods": [["chlorite", "Vergleichbare geschnitzte Steingefäße kommen an beiden Orten vor."], ["ceramics", "Regionale Keramikkomplexe zeigen mehrere deutliche Parallelen."]], "timelineIndex": 1}, "susa": {"name": "Susa", "status": "Westliche Verbreitung und künstlerische Parallelen", "summary": "Objekte der weiteren Tradition geschnitzter Chloritgefäße erreichten Susa; zudem vergleichen Forscher glyptisches und künstlerisches Material aus Südostiran mit Elam und Susiana.", "evidence": "Geschnitzte Chloritgefäße des sogenannten „Intercultural Style“ sind in Susa belegt; vergleichende Studien verweisen auf ikonographische und glyptische Parallelen zwischen Südostiran und Südwestiran.", "caution": "Dies beweist für sich genommen keine direkte Handelsroute Jiroft–Susa. Viele berühmte „Jiroft“-Objekte stammen aus geplünderten Kontexten, und die Mechanismen ihrer Verlagerung nach Westen bleiben unklar.", "source": "Wichtige Literatur: Encyclopaedia Iranica („Chlorite“); Pittman; Studien zu Konar Sandal und Susa.", "goods": [["chlorite", "Chloritgefäße gehören zu einer weiteren Verbreitungssphäre bis nach Susiana."], ["glyptic", "Ikonographische und glyptische Parallelen werden häufig diskutiert."]], "timelineIndex": 2}, "shahr": {"name": "Schahr-i Sochta", "status": "Ostiranische Interaktionssphäre", "summary": "Jiroft und Schahr-i Sochta waren wichtige Zentren innerhalb der komplexen Austauschnetzwerke Ost- und Südostirans im 3. Jahrtausend v. Chr.", "evidence": "Einige Keramikformen aus Gräbern und Fundplätzen des Halil-Rud-Gebiets besitzen enge chronologische und typologische Parallelen in Schahr-i Sochta. Beide Zentren waren außerdem in Fernnetzwerke eingebunden, die Stein, Muscheln und andere Prestigematerialien umfassten.", "caution": "Die Beziehung veränderte sich im Lauf der Zeit. „Verbindung“ bedeutet hier archäologische und austauschbezogene Beziehungen, nicht politische Einheit.", "source": "Wichtige Literatur: Pittman; Eskandari et al.; Forschungen zu Schahr-i Sochta.", "goods": [["ceramics", "Starke keramische und chronologische Parallelen."], ["shell", "Netzwerke mit Muscheln und anderen wertvollen Materialien sind hier wichtig."]], "timelineIndex": 2}, "indus": {"name": "Industal", "status": "Fernverbreitung", "summary": "Die Verbreitung geschnitzter Chloritgefäße und verwandter Prestigegüter reicht ostwärts in die Induswelt, einschließlich Funden aus Mohenjo-daro.", "evidence": "Gefäße der weiteren geschnitzten Chlorittradition sind im Industal bekannt. Deshalb wird Jiroft häufig als Teil der Austauschwelt zwischen dem iranischen Hochland und der Indus-Zivilisation diskutiert.", "caution": "Ein Gefäß im Industal ist noch kein automatischer Beweis für direkten Handel mit Konar Sandal. Objekte können über mehrere Zwischenstationen weitergegeben worden sein, und ihre Provenienzen sind unterschiedlich.", "source": "Wichtige Literatur: Encyclopaedia Iranica („Chlorite“, „Jiroft“); Pittman; Perrot.", "goods": [["prestige", "Prestigegüter zirkulierten über große Entfernungen."], ["chlorite", "Geschnitzte Chloritgefäße stehen im Zentrum der Diskussion."]], "timelineIndex": 3}, "gulf": {"name": "Persischer Golf", "status": "Maritimes Umverteilungsnetz", "summary": "Der Persische Golf bildete einen wichtigen südlichen Korridor, über den Prestigegüter aus Südostiran nach Arabien und Mesopotamien zirkulieren konnten.", "evidence": "Geschnitzte Chloritgefäße sind besonders auf Tarut gut belegt und auch auf Failaka bekannt. Hinweise auf Muschelverarbeitung in Südostiran deuten ebenfalls auf Zugang zu Ressourcen des Golfs oder des Arabischen Meeres hin.", "caution": "Das Material vom Persischen Golf spricht für maritime Konnektivität, bedeutet aber nicht, dass jedes dort gefundene Chloritgefäß in Jiroft hergestellt oder direkt aus dem Halil-Rud-Gebiet geliefert wurde.", "source": "Wichtige Literatur: Encyclopaedia Iranica („Maritime Trade“, „Chlorite“); Perrot.", "goods": [["maritime", "Seetransport und Küstenkorridore sind hier besonders wichtig."], ["chlorite", "Chloritgefäße sind eine wichtige Fundkategorie im Golfraum."], ["shell", "Muscheln und Meeresressourcen gehören zum weiteren Zusammenhang."]], "timelineIndex": 4}}}};
+
+const iconSVG = {
+  chlorite: `<svg viewBox="0 0 24 24" fill="none" stroke="#8a5a2b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8l2 3v10c0 2-2 3-6 3s-6-1-6-3V7l2-3Z"/><path d="M8 8h8"/><path d="M10 12c1 1 3 1 4 0s3-1 4 0"/></svg>`,
+  ceramics: `<svg viewBox="0 0 24 24" fill="none" stroke="#8a5a2b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3c0 2 1 3 3 4 2-1 3-2 3-4"/><path d="M8 7h8"/><path d="M9 7v4c0 2-3 2-3 5 0 3 2 5 6 5s6-2 6-5c0-3-3-3-3-5V7"/></svg>`,
+  prestige: `<svg viewBox="0 0 24 24" fill="none" stroke="#8a5a2b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 19 10 12 21 5 10 12 3Z"/><path d="M5 10h14"/><path d="M9 10 12 3l3 7"/></svg>`,
+  maritime: `<svg viewBox="0 0 24 24" fill="none" stroke="#3d6d70" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M12 4l6 4-6 2"/><path d="M12 6 7 10l5 1"/><path d="M4 18c1 .8 2 .8 3.5 0 1.5-.8 2.5-.8 4 0 1.5.8 2.5.8 4 0 1.5-.8 2.5-.8 4 0"/></svg>`,
+  glyptic: `<svg viewBox="0 0 24 24" fill="none" stroke="#3d6d70" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M8 9h8M8 12h8M8 15h5"/></svg>`,
+  shell: `<svg viewBox="0 0 24 24" fill="none" stroke="#8a5a2b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 17c0-5 2.5-9 6-9s6 4 6 9"/><path d="M8 17c0-4 1.8-7 4-7s4 3 4 7"/><path d="M10 17c0-2.7.9-5 2-5s2 2.3 2 5"/><path d="M6 17h12"/></svg>`
+};
+
+let lang = "en";
+let pinned = "shahdad";
+let current = pinned;
+let autoPlay = true;
+let idx = 0;
+let lastTime = performance.now();
+const order = ["shahdad","susa","shahr","indus","gulf"];
+
+const el = {
+  mainTitle: document.getElementById("mainTitle"),
+  mainSubtitle: document.getElementById("mainSubtitle"),
+  pill1: document.getElementById("pill1"),
+  pill2: document.getElementById("pill2"),
+  pill3: document.getElementById("pill3"),
+  svgTitle: document.getElementById("svgTitle"),
+  svgDesc: document.getElementById("svgDesc"),
+  legend1: document.getElementById("legend1"),
+  legend2: document.getElementById("legend2"),
+  legend3: document.getElementById("legend3"),
+  vizNote: document.getElementById("vizNote"),
+  eyebrow: document.getElementById("eyebrow"),
+  whatTitle: document.getElementById("whatTitle"),
+  evidenceTitle: document.getElementById("evidenceTitle"),
+  galleryTitle: document.getElementById("galleryTitle"),
+  cautionTitle: document.getElementById("cautionTitle"),
+  timelineTitle: document.getElementById("timelineTitle"),
+  toggleAuto: document.getElementById("toggleAuto"),
+  resetBtn: document.getElementById("resetBtn"),
+  footerText: document.getElementById("footerText"),
+  name: document.getElementById("name"),
+  statusText: document.getElementById("statusText"),
+  summary: document.getElementById("summary"),
+  evidence: document.getElementById("evidence"),
+  gallery: document.getElementById("gallery"),
+  caution: document.getElementById("caution"),
+  source: document.getElementById("source"),
+  timeline: document.getElementById("timeline")
+};
+
+const labelEls = {
+  edge: {
+    shahdad: document.getElementById("edge-text-shahdad"),
+    susa: document.getElementById("edge-text-susa"),
+    shahr: document.getElementById("edge-text-shahr"),
+    indus: document.getElementById("edge-text-indus"),
+    gulf: document.getElementById("edge-text-gulf")
+  },
+  node: {
+    shahdad: document.getElementById("node-shahdad"),
+    shahdadSub: document.getElementById("node-shahdad-sub"),
+    susa: document.getElementById("node-susa"),
+    susaSub: document.getElementById("node-susa-sub"),
+    shahr: document.getElementById("node-shahr"),
+    shahrSub: document.getElementById("node-shahr-sub"),
+    indus: document.getElementById("node-indus"),
+    indusSub: document.getElementById("node-indus-sub"),
+    gulf: document.getElementById("node-gulf"),
+    gulfSub: document.getElementById("node-gulf-sub"),
+    center: document.getElementById("node-center"),
+    center1: document.getElementById("node-center-sub1"),
+    center2: document.getElementById("node-center-sub2")
+  }
+};
+
+function renderGallery(regionData) {
+  el.gallery.innerHTML = "";
+  const titleMap = DATA[lang].goodsTitleMap;
+  (regionData.goods || []).forEach(([kind, desc]) => {
+    const card = document.createElement("div");
+    card.className = "artifact-card";
+    card.innerHTML = `
+      <div class="artifact-icon">${iconSVG[kind] || iconSVG.prestige}</div>
+      <div>
+        <div class="artifact-title">${titleMap[kind] || kind}</div>
+        <div class="artifact-desc">${desc}</div>
+      </div>
+    `;
+    el.gallery.appendChild(card);
+  });
+}
+
+function renderTimeline(activeIndex) {
+  const t = DATA[lang].timeline;
+  el.timeline.innerHTML = "";
+  t.forEach((item, i) => {
+    const step = document.createElement("div");
+    step.className = "step" + (i === activeIndex ? " active" : "");
+    step.innerHTML = `
+      <div class="marker">${i+1}</div>
+      <div class="step-card">
+        <div class="step-title">${item.label}</div>
+        <div class="step-desc">${item.desc}</div>
+      </div>
+    `;
+    el.timeline.appendChild(step);
+  });
+}
+
+function setDetail(id) {
+  current = id;
+  const d = DATA[lang].regions[id];
+  el.name.textContent = d.name;
+  el.statusText.textContent = d.status;
+  el.summary.textContent = d.summary;
+  el.evidence.textContent = d.evidence;
+  renderGallery(d);
+  el.caution.textContent = d.caution;
+  el.source.textContent = d.source;
+  renderTimeline(d.timelineIndex ?? 0);
+
+  document.querySelectorAll(".region").forEach(n => n.classList.toggle("active", n.dataset.id === id));
+  document.querySelectorAll(".edge").forEach(e => e.classList.toggle("active", e.id === "edge-" + id));
+}
+
+function pin(id) {
+  pinned = id;
+  setDetail(id);
+  autoPlay = false;
+  el.toggleAuto.textContent = DATA[lang].ui.toggleOff;
+}
+
+function applyLanguage(newLang) {
+  lang = newLang;
+  const t = DATA[lang];
+  document.documentElement.lang = lang;
+  document.documentElement.dir = t.dir;
+  document.body.className = t.bodyClass || "";
+
+  el.mainTitle.textContent = t.ui.mainTitle;
+  el.mainSubtitle.textContent = t.ui.mainSubtitle;
+  el.pill1.textContent = t.ui.pill1;
+  el.pill2.textContent = t.ui.pill2;
+  el.pill3.textContent = t.ui.pill3;
+  el.svgTitle.textContent = t.ui.titleSVG;
+  el.svgDesc.textContent = t.ui.descSVG;
+  el.legend1.textContent = t.ui.legend1;
+  el.legend2.textContent = t.ui.legend2;
+  el.legend3.textContent = t.ui.legend3;
+  el.vizNote.textContent = t.ui.vizNote;
+  el.eyebrow.textContent = t.ui.eyebrow;
+  el.whatTitle.textContent = t.ui.whatTitle;
+  el.evidenceTitle.textContent = t.ui.evidenceTitle;
+  el.galleryTitle.textContent = t.ui.galleryTitle;
+  el.cautionTitle.textContent = t.ui.cautionTitle;
+  el.timelineTitle.textContent = t.ui.timelineTitle;
+  el.toggleAuto.textContent = autoPlay ? t.ui.toggleOn : t.ui.toggleOff;
+  el.resetBtn.textContent = t.ui.resetBtn;
+  el.footerText.textContent = t.ui.footerText;
+
+  labelEls.edge.shahdad.textContent = t.edgeLabels.shahdad;
+  labelEls.edge.susa.textContent = t.edgeLabels.susa;
+  labelEls.edge.shahr.textContent = t.edgeLabels.shahr;
+  labelEls.edge.indus.textContent = t.edgeLabels.indus;
+  labelEls.edge.gulf.textContent = t.edgeLabels.gulf;
+
+  labelEls.node.shahdad.textContent = t.nodes.shahdad[0];
+  labelEls.node.shahdadSub.textContent = t.nodes.shahdad[1];
+  labelEls.node.susa.textContent = t.nodes.susa[0];
+  labelEls.node.susaSub.textContent = t.nodes.susa[1];
+  labelEls.node.shahr.textContent = t.nodes.shahr[0];
+  labelEls.node.shahrSub.textContent = t.nodes.shahr[1];
+  labelEls.node.indus.textContent = t.nodes.indus[0];
+  labelEls.node.indusSub.textContent = t.nodes.indus[1];
+  labelEls.node.gulf.textContent = t.nodes.gulf[0];
+  labelEls.node.gulfSub.textContent = t.nodes.gulf[1];
+  labelEls.node.center.textContent = t.nodes.center[0];
+  labelEls.node.center1.textContent = t.nodes.center[1];
+  labelEls.node.center2.textContent = t.nodes.center[2];
+
+  document.querySelectorAll(".langbtn").forEach(btn => btn.classList.toggle("active", btn.dataset.lang === lang));
+  setDetail(pinned);
+}
+
+document.querySelectorAll(".langbtn").forEach(btn => btn.addEventListener("click", () => applyLanguage(btn.dataset.lang)));
+
+document.querySelectorAll(".region").forEach(node => {
+  const id = node.dataset.id;
+  node.addEventListener("mouseenter", () => setDetail(id));
+  node.addEventListener("mouseleave", () => setDetail(pinned));
+  node.addEventListener("focus", () => setDetail(id));
+  node.addEventListener("blur", () => setDetail(pinned));
+  node.addEventListener("click", () => pin(id));
+  node.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      pin(id);
+    }
+  });
+});
+
+el.toggleAuto.addEventListener("click", () => {
+  autoPlay = !autoPlay;
+  el.toggleAuto.textContent = autoPlay ? DATA[lang].ui.toggleOn : DATA[lang].ui.toggleOff;
+  if (autoPlay) {
+    pinned = order[idx];
+    setDetail(pinned);
+  }
+});
+
+el.resetBtn.addEventListener("click", () => {
+  pinned = "shahdad";
+  idx = 0;
+  setDetail(pinned);
+});
+
+const dotsLayer = document.getElementById("dots");
+const movers = [];
+order.forEach((id, i) => {
+  const path = document.getElementById("edge-" + id);
+  const length = path.getTotalLength();
+  [0, 0.48].forEach((offset, j) => {
+    const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    c.setAttribute("r", j === 0 ? "5" : "3.2");
+    c.setAttribute("class", "flow-dot" + (j === 1 ? " alt" : ""));
+    dotsLayer.appendChild(c);
+    movers.push({id, path, length, el:c, speed:0.046 + i*0.004 + j*0.003, t:offset + i*0.06});
+  });
+});
+
+function animate(ts) {
+  const dt = Math.min(0.05, (ts - lastTime) / 1000);
+  lastTime = ts;
+  movers.forEach(m => {
+    m.t += dt * m.speed;
+    while (m.t > 1) m.t -= 1;
+    const pt = m.path.getPointAtLength(m.length * m.t);
+    m.el.setAttribute("cx", pt.x);
+    m.el.setAttribute("cy", pt.y);
+    const active = current === m.id || pinned === m.id;
+    m.el.style.opacity = active ? 0.95 : 0.5;
+    m.el.setAttribute("r", active ? (m.el.classList.contains("alt") ? "4.1" : "5.7") : (m.el.classList.contains("alt") ? "3.0" : "4.3"));
+  });
+  requestAnimationFrame(animate);
+}
+
+setInterval(() => {
+  if (!autoPlay) return;
+  idx = (idx + 1) % order.length;
+  pinned = order[idx];
+  setDetail(pinned);
+}, 4300);
+
+applyLanguage("en");
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
